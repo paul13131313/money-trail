@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 import { products } from '@/data/products';
-import { SupplyNode, NODE_COLORS, NODE_TYPE_LABELS } from '@/types';
+import { SupplyNode, NODE_COLORS, NODE_TYPE_LABELS, buildNodeColorMap } from '@/types';
 import SankeyChart from '@/components/SankeyChart';
 import NodeDetail from '@/components/NodeDetail';
 import DataBadge from '@/components/DataBadge';
@@ -13,6 +13,7 @@ export default function ProductPage() {
   const params = useParams();
   const product = products.find((p) => p.id === params.id);
   const [selectedNode, setSelectedNode] = useState<SupplyNode | null>(null);
+  const nodeColorMap = product ? buildNodeColorMap(product.nodes) : new Map<string, string>();
 
   if (!product) {
     return (
@@ -97,6 +98,7 @@ export default function ProductPage() {
                 node={selectedNode}
                 productPrice={product.price}
                 onClose={() => setSelectedNode(null)}
+                nodeColor={selectedNode ? nodeColorMap.get(selectedNode.id) : undefined}
               />
             ) : (
               <div className="bg-white rounded-2xl p-6 text-center shadow-sm border border-gray-100">
@@ -126,7 +128,7 @@ export default function ProductPage() {
                     >
                       <span
                         className="w-3 h-3 rounded-full shrink-0"
-                        style={{ backgroundColor: NODE_COLORS[node.type] }}
+                        style={{ backgroundColor: nodeColorMap.get(node.id) || NODE_COLORS[node.type] }}
                       />
                       <span className="text-xs text-[#1a1a1a] flex-1 truncate font-semibold">
                         {node.name}

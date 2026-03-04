@@ -6,12 +6,13 @@ type Props = {
   node: SupplyNode | null;
   productPrice: number;
   onClose: () => void;
+  nodeColor?: string;
 };
 
-export default function NodeDetail({ node, productPrice, onClose }: Props) {
+export default function NodeDetail({ node, productPrice, onClose, nodeColor }: Props) {
   if (!node) return null;
 
-  const color = NODE_COLORS[node.type];
+  const color = nodeColor || NODE_COLORS[node.type];
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 animate-in">

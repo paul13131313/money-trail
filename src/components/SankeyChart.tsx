@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as d3 from 'd3';
 import { sankey as d3Sankey, sankeyLinkHorizontal, SankeyNode, SankeyLink } from 'd3-sankey';
-import { ProductData, SupplyNode, NODE_COLORS } from '@/types';
+import { ProductData, SupplyNode, CHART_PALETTE } from '@/types';
 import { buildSankeyData, SankeyNodeData, SankeyLinkData } from '@/lib/sankey';
 
 type Props = {
@@ -75,53 +75,27 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
 
     const g = svg.append('g');
 
-    // Create gradient definitions for each link
-    const defs = svg.append('defs');
-    links.forEach((d, i) => {
-      const source = d.source as SNode;
-      const target = d.target as SNode;
-      const sourceColor = source.id === 'source' ? '#EB3322' : (NODE_COLORS[source.type] || '#888');
-      const targetColor = NODE_COLORS[target.type] || '#888';
-
-      const gradient = defs.append('linearGradient')
-        .attr('id', `link-gradient-${i}`)
-        .attr('gradientUnits', 'userSpaceOnUse')
-        .attr('x1', source.x1 || 0)
-        .attr('y1', 0)
-        .attr('x2', target.x0 || 0)
-        .attr('y2', 0);
-
-      // 4-stop gradient: solid at edges, smooth blend in middle
-      gradient.append('stop')
-        .attr('offset', '0%')
-        .attr('stop-color', sourceColor)
-        .attr('stop-opacity', 0.9);
-
-      gradient.append('stop')
-        .attr('offset', '25%')
-        .attr('stop-color', sourceColor)
-        .attr('stop-opacity', 0.7);
-
-      gradient.append('stop')
-        .attr('offset', '75%')
-        .attr('stop-color', targetColor)
-        .attr('stop-opacity', 0.7);
-
-      gradient.append('stop')
-        .attr('offset', '100%')
-        .attr('stop-color', targetColor)
-        .attr('stop-opacity', 0.9);
+    // Assign unique colors to each non-source node
+    const nodeColorMap = new Map<string, string>();
+    const SOURCE_COLOR = '#1a1a1a';
+    nodeColorMap.set('source', SOURCE_COLOR);
+    const targetNodes = nodes.filter((n) => n.id !== 'source');
+    targetNodes.forEach((n, i) => {
+      nodeColorMap.set(n.id, CHART_PALETTE[i % CHART_PALETTE.length]);
     });
 
-    // Links with gradient stroke
+    // Links - each link uses its target node's color (one continuous color per flow)
     g.append('g')
       .attr('fill', 'none')
       .selectAll('path')
       .data(links)
       .join('path')
       .attr('d', sankeyLinkHorizontal())
-      .attr('stroke', (_d, i) => `url(#link-gradient-${i})`)
-      .attr('stroke-opacity', 1)
+      .attr('stroke', (d) => {
+        const target = d.target as SNode;
+        return nodeColorMap.get(target.id) || '#888';
+      })
+      .attr('stroke-opacity', 0.85)
       .attr('stroke-width', (d) => Math.max(1, d.width || 0));
 
     // Nodes
@@ -144,8 +118,47 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
         setHoveredNode(null);
       });
 
-    // Node shapes - rounded on outer edge, flat on link-connection edge
+    // Source node: draw colored segments matching each link's color
+    const sourceNode = nodes.find((n) => n.id === 'source');
+    if (sourceNode) {
+      const sx = sourceNode.x0 || 0;
+      const sw = (sourceNode.x1 || 0) - sx;
+      const sourceLinks = links.filter((l) => (l.source as SNode).id === 'source');
+
+      sourceLinks.forEach((link, i) => {
+        const target = link.target as SNode;
+        const color = nodeColorMap.get(target.id) || '#888';
+        const y0 = link.y0 || 0;
+        const linkW = link.width || 0;
+        const halfW = linkW / 2;
+        const segY = y0 - halfW;
+        const segH = linkW;
+        const r = Math.min(5, sw / 2, segH / 2);
+
+        // First segment: rounded top-left, last: rounded bottom-left, middle: flat left
+        const isFirst = i === 0;
+        const isLast = i === sourceLinks.length - 1;
+        const rTL = isFirst ? r : 0;
+        const rBL = isLast ? r : 0;
+
+        const path = `M${sx + rTL},${segY} L${sx + sw},${segY} L${sx + sw},${segY + segH} L${sx + rBL},${segY + segH}` +
+          (rBL > 0 ? ` Q${sx},${segY + segH} ${sx},${segY + segH - rBL}` : ` L${sx},${segY + segH}`) +
+          ` L${sx},${segY + rTL}` +
+          (rTL > 0 ? ` Q${sx},${segY} ${sx + rTL},${segY}` : '') +
+          ' Z';
+
+        g.append('path')
+          .attr('class', 'node-shape source-segment')
+          .attr('data-target-id', target.id)
+          .attr('d', path)
+          .attr('fill', color)
+          .attr('opacity', 1);
+      });
+    }
+
+    // Target node shapes - flat left, rounded right
     nodeGroup
+      .filter((d) => d.id !== 'source')
       .append('path')
       .attr('class', 'node-shape')
       .attr('d', (d) => {
@@ -154,19 +167,9 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
         const w = (d.x1 || 0) - x;
         const h = Math.max(1, (d.y1 || 0) - y);
         const r = Math.min(5, w / 2, h / 2);
-
-        if (d.id === 'source') {
-          // Source node: rounded left, flat right
-          return `M${x + r},${y} L${x + w},${y} L${x + w},${y + h} L${x + r},${y + h} Q${x},${y + h} ${x},${y + h - r} L${x},${y + r} Q${x},${y} ${x + r},${y} Z`;
-        } else {
-          // Target nodes: flat left, rounded right
-          return `M${x},${y} L${x + w - r},${y} Q${x + w},${y} ${x + w},${y + r} L${x + w},${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} L${x},${y + h} Z`;
-        }
+        return `M${x},${y} L${x + w - r},${y} Q${x + w},${y} ${x + w},${y + r} L${x + w},${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} L${x},${y + h} Z`;
       })
-      .attr('fill', (d) => {
-        if (d.id === 'source') return '#EB3322';
-        return NODE_COLORS[d.type] || '#888';
-      })
+      .attr('fill', (d) => nodeColorMap.get(d.id) || '#888')
       .attr('opacity', 1);
 
     // Source node label
@@ -176,7 +179,7 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
       .attr('x', (d) => ((d.x0 || 0) + (d.x1 || 0)) / 2)
       .attr('y', (d) => (d.y0 || 0) - 10)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#EB3322')
+      .attr('fill', '#1a1a1a')
       .attr('font-size', '13px')
       .attr('font-family', "'Unbounded', sans-serif")
       .attr('font-weight', '800')
@@ -230,14 +233,27 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
         return target.id === hoveredNode ? 1 : 0.15;
       });
 
-    svg.selectAll<SVGPathElement, SNode>('.node-shape')
+    // Target node shapes
+    svg.selectAll<SVGPathElement, SNode>('.node-shape:not(.source-segment)')
       .transition()
       .duration(200)
       .attr('opacity', (d) => {
         if (!hoveredNode) return 1;
-        if (d.id === 'source' || d.id === hoveredNode) return 1;
+        if (d.id === hoveredNode) return 1;
         return 0.3;
       });
+
+    // Source segments - highlight the one matching hovered target
+    svg.selectAll('.source-segment').each(function() {
+      const el = d3.select(this);
+      const targetId = el.attr('data-target-id');
+      el.transition()
+        .duration(200)
+        .attr('opacity', () => {
+          if (!hoveredNode) return 1;
+          return targetId === hoveredNode ? 1 : 0.3;
+        });
+    });
   }, [hoveredNode]);
 
   const w = dimensions?.width || 800;
