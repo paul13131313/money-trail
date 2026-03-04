@@ -5,6 +5,7 @@ export const products: ProductData[] = [
     id: "coffee",
     name: "コーヒー1杯",
     price: 500,
+    category: "product",
     isRealData: true,
     dataSource: "Fairtrade Foundation / ICO",
     nodes: [
@@ -21,6 +22,7 @@ export const products: ProductData[] = [
     id: "tshirt",
     name: "Tシャツ",
     price: 3000,
+    category: "product",
     isRealData: true,
     dataSource: "Clean Clothes Campaign / Fashion Transparency Index",
     nodes: [
@@ -38,6 +40,7 @@ export const products: ProductData[] = [
     id: "iphone",
     name: "iPhone",
     price: 150000,
+    category: "product",
     isRealData: true,
     dataSource: "Counterpoint Research / iFixit Teardown 2023",
     nodes: [
@@ -57,6 +60,7 @@ export const products: ProductData[] = [
     id: "sneakers",
     name: "スニーカー",
     price: 15000,
+    category: "product",
     isRealData: true,
     dataSource: "Labour Behind the Label / Nike Annual Report",
     nodes: [
@@ -73,6 +77,7 @@ export const products: ProductData[] = [
     id: "chocolate",
     name: "チョコレート1枚",
     price: 300,
+    category: "product",
     isRealData: true,
     dataSource: "Tony's Chocolonely Annual Report / Fairtrade",
     nodes: [
@@ -89,6 +94,7 @@ export const products: ProductData[] = [
     id: "gasoline",
     name: "ガソリン1L",
     price: 180,
+    category: "product",
     isRealData: true,
     dataSource: "資源エネルギー庁 石油製品価格調査",
     nodes: [
@@ -103,6 +109,7 @@ export const products: ProductData[] = [
     id: "water",
     name: "ペットボトル水",
     price: 150,
+    category: "product",
     isRealData: true,
     dataSource: "各社IR・業界推定",
     nodes: [
@@ -119,6 +126,7 @@ export const products: ProductData[] = [
     id: "banana",
     name: "バナナ1本",
     price: 30,
+    category: "product",
     isRealData: true,
     dataSource: "Fairtrade Foundation / バナナ労働者ネットワーク",
     nodes: [
@@ -135,6 +143,7 @@ export const products: ProductData[] = [
     id: "gyudon",
     name: "牛丼1杯",
     price: 500,
+    category: "product",
     isRealData: false,
     nodes: [
       { id: "store", name: "店舗運営・人件費・利益", type: "retail", amount: 150, percentage: 30 },
@@ -150,6 +159,7 @@ export const products: ProductData[] = [
     id: "jeans",
     name: "ジーンズ",
     price: 10000,
+    category: "product",
     isRealData: true,
     dataSource: "Labour Behind the Label",
     nodes: [
@@ -162,6 +172,98 @@ export const products: ProductData[] = [
         description: "ジーンズ1本の縫製には熟練作業員で約1時間。賃金は1本あたり200円程度。" },
       { id: "wash", name: "洗い加工・仕上げ", type: "manufacturing", amount: 600, percentage: 6 },
       { id: "tax7", name: "関税・輸送・その他", type: "other", amount: 400, percentage: 4 }
+    ]
+  },
+  // --- 人生・社会 ---
+  {
+    id: "lifetime-income",
+    name: "生涯年収3億円",
+    price: 300000000,
+    category: "life",
+    isRealData: false,
+    nodes: [
+      { id: "tax_income", name: "所得税・住民税", type: "other", amount: 60000000, percentage: 20,
+        description: "累進課税により高所得ほど税率が上がる。平均実効税率は約20%前後。" },
+      { id: "social_ins", name: "社会保険料", type: "other", amount: 45000000, percentage: 15,
+        description: "健康保険・厚生年金・雇用保険など。給与の約15%が天引きされる。" },
+      { id: "housing", name: "住居費", type: "retail", amount: 54000000, percentage: 18,
+        description: "賃貸・住宅ローン合計。都市部では生涯で5,000万円以上になることも。" },
+      { id: "food_life", name: "食費", type: "material", amount: 36000000, percentage: 12 },
+      { id: "education", name: "教育費", type: "distribution", amount: 30000000, percentage: 10,
+        description: "子ども1人あたり1,000万円以上。大学まで私立だと2,500万円を超える場合も。" },
+      { id: "transport", name: "交通・通信費", type: "distribution", amount: 24000000, percentage: 8 },
+      { id: "savings", name: "貯蓄・投資", type: "manufacturing", amount: 27000000, percentage: 9,
+        description: "日本の家計貯蓄率は約5〜10%。老後2,000万円問題も話題に。" },
+      { id: "other_life", name: "その他（娯楽・医療・保険）", type: "other", amount: 24000000, percentage: 8 }
+    ]
+  },
+  // --- エンタメ ---
+  {
+    id: "movie-ticket",
+    name: "映画チケット",
+    price: 1900,
+    category: "entertainment",
+    isRealData: false,
+    nodes: [
+      { id: "theater", name: "映画館（施設・人件費・利益）", type: "retail", amount: 950, percentage: 50,
+        description: "映画館の取り分は約50%。ポップコーン等の売店が利益の大部分を占める。" },
+      { id: "distributor", name: "配給会社", type: "distribution", amount: 380, percentage: 20 },
+      { id: "production", name: "制作費（監督・俳優・スタッフ）", type: "manufacturing", amount: 285, percentage: 15,
+        description: "ハリウッド大作の制作費は200〜300億円。日本映画は平均3〜5億円。" },
+      { id: "marketing_movie", name: "宣伝・マーケティング", type: "retail", amount: 152, percentage: 8 },
+      { id: "tax_movie", name: "消費税", type: "other", amount: 133, percentage: 7 }
+    ]
+  },
+  {
+    id: "spotify",
+    name: "Spotify月額",
+    price: 980,
+    category: "entertainment",
+    isRealData: false,
+    nodes: [
+      { id: "royalty", name: "アーティスト・権利者", type: "labor", amount: 294, percentage: 30,
+        description: "Spotifyの1再生あたりの支払いは約0.3〜0.5円。月1万再生で3,000〜5,000円。" },
+      { id: "label", name: "レコード会社", type: "distribution", amount: 245, percentage: 25,
+        description: "レコード会社がロイヤリティの大半を受け取り、アーティストへの分配は一部。" },
+      { id: "spotify_profit", name: "Spotify運営（開発・サーバー）", type: "manufacturing", amount: 245, percentage: 25 },
+      { id: "spotify_marketing", name: "マーケティング・営業", type: "retail", amount: 98, percentage: 10 },
+      { id: "tax_spotify", name: "決済手数料・税", type: "other", amount: 98, percentage: 10 }
+    ]
+  },
+  // --- ブラック枠 ---
+  {
+    id: "cigarette",
+    name: "タバコ1本",
+    price: 30,
+    category: "dark",
+    isRealData: false,
+    nodes: [
+      { id: "tobacco_tax", name: "たばこ税・消費税", type: "other", amount: 19, percentage: 63,
+        description: "タバコ価格の約6割が税金。国・地方たばこ税、たばこ特別税、消費税の4重課税。" },
+      { id: "jt_profit", name: "JT利益・販売管理費", type: "retail", amount: 5, percentage: 16 },
+      { id: "tobacco_leaf", name: "葉タバコ原料", type: "material", amount: 3, percentage: 10, country: "ブラジル・中国・インド",
+        description: "葉タバコ農家の多くは途上国の小規模農家。児童労働の問題も指摘されている。" },
+      { id: "manufacturing_cig", name: "製造コスト", type: "manufacturing", amount: 2, percentage: 7 },
+      { id: "filter", name: "フィルター・包装", type: "material", amount: 1, percentage: 4 }
+    ]
+  },
+  {
+    id: "gacha",
+    name: "スマホゲーム課金",
+    price: 10000,
+    category: "dark",
+    isRealData: false,
+    nodes: [
+      { id: "platform_fee", name: "Apple/Google手数料", type: "distribution", amount: 3000, percentage: 30,
+        description: "アプリストアは売上の30%を手数料として徴収。開発者の最大の支出先。" },
+      { id: "game_profit", name: "運営会社利益", type: "retail", amount: 2500, percentage: 25 },
+      { id: "dev_cost", name: "開発・サーバー運用", type: "manufacturing", amount: 2000, percentage: 20,
+        description: "ソーシャルゲームの開発費は数億〜数十億円。サーバー費用も高額。" },
+      { id: "marketing_game", name: "広告・マーケティング", type: "retail", amount: 1500, percentage: 15,
+        description: "ユーザー1人獲得コスト（CPI）は数百〜数千円。広告費は売上の15〜25%。" },
+      { id: "creator_pay", name: "クリエイター報酬", type: "labor", amount: 500, percentage: 5,
+        description: "イラストレーター・声優・シナリオライターへの報酬。全体の5%程度。" },
+      { id: "tax_game", name: "消費税・その他", type: "other", amount: 500, percentage: 5 }
     ]
   },
 ];

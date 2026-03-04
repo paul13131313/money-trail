@@ -1,5 +1,7 @@
 export type NodeType = 'retail' | 'distribution' | 'manufacturing' | 'material' | 'labor' | 'other';
 
+export type Category = 'product' | 'life' | 'entertainment' | 'dark';
+
 export type SupplyNode = {
   id: string;
   name: string;
@@ -15,9 +17,17 @@ export type ProductData = {
   id: string;
   name: string;
   price: number;
+  category: Category;
   isRealData: boolean;
   dataSource?: string;
   nodes: SupplyNode[];
+};
+
+export const CATEGORY_LABELS: Record<Category, string> = {
+  product: '商品',
+  life: '人生',
+  entertainment: 'エンタメ',
+  dark: '闇',
 };
 
 export const NODE_COLORS: Record<NodeType, string> = {

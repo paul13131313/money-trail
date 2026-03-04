@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { products } from '@/data/products';
+import { Category } from '@/types';
 import DataBadge from './DataBadge';
 
 const PRODUCT_ICONS: Record<string, string> = {
@@ -15,12 +16,25 @@ const PRODUCT_ICONS: Record<string, string> = {
   banana: '\uD83C\uDF4C',
   gyudon: '\uD83C\uDF5A',
   jeans: '\uD83D\uDC56',
+  'lifetime-income': '\uD83D\uDCB0',
+  'movie-ticket': '\uD83C\uDFAC',
+  spotify: '\uD83C\uDFB5',
+  cigarette: '\uD83D\uDEAC',
+  gacha: '\uD83C\uDFB0',
 };
 
-export default function ProductGrid() {
+type Props = {
+  category: Category | 'all';
+};
+
+export default function ProductGrid({ category }: Props) {
+  const filtered = category === 'all'
+    ? products
+    : products.filter((p) => p.category === category);
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-      {products.map((product, i) => (
+      {filtered.map((product, i) => (
         <Link
           key={product.id}
           href={`/product/${product.id}`}

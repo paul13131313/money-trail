@@ -1,20 +1,101 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { products } from '@/data/products';
-import { SupplyNode, NODE_COLORS, NODE_TYPE_LABELS, buildNodeColorMap } from '@/types';
+import { ProductData, SupplyNode, NODE_COLORS, NODE_TYPE_LABELS, buildNodeColorMap } from '@/types';
 import dynamic from 'next/dynamic';
 const SankeyChart = dynamic(() => import('@/components/SankeyChart'), { ssr: false });
 import NodeDetail from '@/components/NodeDetail';
 import DataBadge from '@/components/DataBadge';
 
-export default function ProductPage() {
+function ProductPageInner() {
   const params = useParams();
-  const product = products.find((p) => p.id === params.id);
+  const searchParams = useSearchParams();
+  const isCustom = params.id === 'custom';
+
+  const [customProduct, setCustomProduct] = useState<ProductData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [selectedNode, setSelectedNode] = useState<SupplyNode | null>(null);
+
+  // For custom AI estimation
+  useEffect(() => {
+    if (!isCustom) return;
+    const name = searchParams.get('name');
+    const priceStr = searchParams.get('price');
+    if (!name || !priceStr) {
+      setError('商品名と価格が指定されていません');
+      return;
+    }
+    const price = parseInt(priceStr, 10);
+    if (!price || price <= 0) {
+      setError('正しい価格を指定してください');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    fetch('/api/estimate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productName: name, price }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) {
+          setError(data.error);
+          return;
+        }
+        setCustomProduct({
+          id: 'custom',
+          name,
+          price,
+          category: 'product',
+          isRealData: false,
+          nodes: data.nodes,
+        });
+      })
+      .catch(() => setError('API呼び出しに失敗しました'))
+      .finally(() => setLoading(false));
+  }, [isCustom, searchParams]);
+
+  const product = isCustom ? customProduct : products.find((p) => p.id === params.id) || null;
   const nodeColorMap = product ? buildNodeColorMap(product.nodes) : new Map<string, string>();
+
+  // Loading state for custom
+  if (isCustom && loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4">
+            <svg className="animate-spin h-10 w-10 text-[#EB3322] mx-auto" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+          <p className="text-gray-500 text-lg font-semibold">AIがコスト内訳を分析中…</p>
+          <p className="text-gray-400 text-sm mt-1">数秒お待ちください</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error or not found
+  if (isCustom && error) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4 text-lg font-semibold">{error}</p>
+          <Link href="/" className="bg-[#EB3322] text-white px-6 py-2 rounded-full font-bold hover:opacity-90 transition-opacity inline-block">
+            &larr; トップに戻る
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -145,5 +226,20 @@ export default function ProductPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function ProductPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <svg className="animate-spin h-10 w-10 text-[#EB3322]" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+      </div>
+    }>
+      <ProductPageInner />
+    </Suspense>
   );
 }

@@ -1,6 +1,14 @@
+'use client';
+
+import { useState } from 'react';
+import { Category } from '@/types';
 import ProductGrid from '@/components/ProductGrid';
+import CategoryTabs from '@/components/CategoryTabs';
+import EstimateForm from '@/components/EstimateForm';
 
 export default function Home() {
+  const [category, setCategory] = useState<Category | 'all'>('all');
+
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
@@ -20,12 +28,17 @@ export default function Home() {
 
       {/* Product Grid */}
       <section className="max-w-5xl mx-auto px-4 py-10">
-        <div className="mb-6 text-center">
-          <div className="inline-block bg-[#FFC737] text-[#1a1a1a] px-6 py-2 rounded-full text-sm font-bold tracking-wide">
-            商品を選んでお金の流れを追跡
-          </div>
+        {/* AI Estimate Form */}
+        <div className="mb-6">
+          <EstimateForm />
         </div>
-        <ProductGrid />
+
+        {/* Category Tabs */}
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+          <CategoryTabs selected={category} onChange={setCategory} />
+        </div>
+
+        <ProductGrid category={category} />
       </section>
 
       {/* Footer */}
