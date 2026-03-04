@@ -15,6 +15,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://money-trail-flax.vercel.app"),
   title: "MONEY TRAIL",
   description: "あなたが払ったお金は、どこへ消えるのか",
   icons: {
