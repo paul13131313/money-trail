@@ -75,20 +75,54 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
 
     const g = svg.append('g');
 
-    // Links
+    // Create gradient definitions for each link
+    const defs = svg.append('defs');
+    links.forEach((d, i) => {
+      const source = d.source as SNode;
+      const target = d.target as SNode;
+      const sourceColor = source.id === 'source' ? '#EB3322' : (NODE_COLORS[source.type] || '#888');
+      const targetColor = NODE_COLORS[target.type] || '#888';
+
+      const gradient = defs.append('linearGradient')
+        .attr('id', `link-gradient-${i}`)
+        .attr('gradientUnits', 'userSpaceOnUse')
+        .attr('x1', source.x1 || 0)
+        .attr('y1', 0)
+        .attr('x2', target.x0 || 0)
+        .attr('y2', 0);
+
+      // 4-stop gradient: solid at edges, smooth blend in middle
+      gradient.append('stop')
+        .attr('offset', '0%')
+        .attr('stop-color', sourceColor)
+        .attr('stop-opacity', 0.9);
+
+      gradient.append('stop')
+        .attr('offset', '25%')
+        .attr('stop-color', sourceColor)
+        .attr('stop-opacity', 0.7);
+
+      gradient.append('stop')
+        .attr('offset', '75%')
+        .attr('stop-color', targetColor)
+        .attr('stop-opacity', 0.7);
+
+      gradient.append('stop')
+        .attr('offset', '100%')
+        .attr('stop-color', targetColor)
+        .attr('stop-opacity', 0.9);
+    });
+
+    // Links with gradient stroke
     g.append('g')
       .attr('fill', 'none')
       .selectAll('path')
       .data(links)
       .join('path')
       .attr('d', sankeyLinkHorizontal())
-      .attr('stroke', (d) => {
-        const target = d.target as SNode;
-        return NODE_COLORS[target.type] || '#888';
-      })
-      .attr('stroke-opacity', 0.5)
-      .attr('stroke-width', (d) => Math.max(1, d.width || 0))
-      .style('mix-blend-mode', 'multiply');
+      .attr('stroke', (_d, i) => `url(#link-gradient-${i})`)
+      .attr('stroke-opacity', 1)
+      .attr('stroke-width', (d) => Math.max(1, d.width || 0));
 
     // Nodes
     const nodeGroup = g
@@ -110,18 +144,29 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
         setHoveredNode(null);
       });
 
-    // Node rectangles - no animation, just show
+    // Node shapes - rounded on outer edge, flat on link-connection edge
     nodeGroup
-      .append('rect')
-      .attr('x', (d) => d.x0 || 0)
-      .attr('y', (d) => d.y0 || 0)
-      .attr('height', (d) => Math.max(1, (d.y1 || 0) - (d.y0 || 0)))
-      .attr('width', (d) => (d.x1 || 0) - (d.x0 || 0))
+      .append('path')
+      .attr('class', 'node-shape')
+      .attr('d', (d) => {
+        const x = d.x0 || 0;
+        const y = d.y0 || 0;
+        const w = (d.x1 || 0) - x;
+        const h = Math.max(1, (d.y1 || 0) - y);
+        const r = Math.min(5, w / 2, h / 2);
+
+        if (d.id === 'source') {
+          // Source node: rounded left, flat right
+          return `M${x + r},${y} L${x + w},${y} L${x + w},${y + h} L${x + r},${y + h} Q${x},${y + h} ${x},${y + h - r} L${x},${y + r} Q${x},${y} ${x + r},${y} Z`;
+        } else {
+          // Target nodes: flat left, rounded right
+          return `M${x},${y} L${x + w - r},${y} Q${x + w},${y} ${x + w},${y + r} L${x + w},${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} L${x},${y + h} Z`;
+        }
+      })
       .attr('fill', (d) => {
         if (d.id === 'source') return '#EB3322';
         return NODE_COLORS[d.type] || '#888';
       })
-      .attr('rx', 6)
       .attr('opacity', 1);
 
     // Source node label
@@ -180,12 +225,12 @@ export default function SankeyChart({ product, onNodeClick }: Props) {
       .transition()
       .duration(200)
       .attr('stroke-opacity', (d) => {
-        if (!hoveredNode) return 0.5;
+        if (!hoveredNode) return 1;
         const target = d.target as SNode;
-        return target.id === hoveredNode ? 0.8 : 0.1;
+        return target.id === hoveredNode ? 1 : 0.15;
       });
 
-    svg.selectAll<SVGRectElement, SNode>('rect')
+    svg.selectAll<SVGPathElement, SNode>('.node-shape')
       .transition()
       .duration(200)
       .attr('opacity', (d) => {
