@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { products } from '@/data/products';
 import { SupplyNode, NODE_COLORS, NODE_TYPE_LABELS, buildNodeColorMap } from '@/types';
-import SankeyChart from '@/components/SankeyChart';
+import dynamic from 'next/dynamic';
+const SankeyChart = dynamic(() => import('@/components/SankeyChart'), { ssr: false });
 import NodeDetail from '@/components/NodeDetail';
 import DataBadge from '@/components/DataBadge';
 
